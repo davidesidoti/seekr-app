@@ -57,7 +57,7 @@ Jellyseerr is an incredible tool for managing media requests, but as of today th
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/seekr-app.git
+git clone https://github.com/davidesidoti/seekr-app.git
 cd seekr-app
 
 # Install dependencies
