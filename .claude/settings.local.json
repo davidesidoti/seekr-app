@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v \"^\\\\.$|^\\\\.\\\\.$|\\\\.git\")",
+      "Bash(git:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(npm install:*)",
+      "Bash(npx expo:*)",
+      "Bash(npm list:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc --version)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/react/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/expo/package.json'\\).version\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(node:*)"
+    ]
+  }
+}
