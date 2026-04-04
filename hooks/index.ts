@@ -1,1 +1,9 @@
 export { queryClient } from './queryClient';
+export { useTrending } from './useTrending';
+export { usePopularMovies } from './usePopularMovies';
+export { usePopularTv } from './usePopularTv';
+export { useSearch } from './useSearch';
+export { useMediaDetails } from './useMediaDetails';
+export { useRecommendations } from './useRecommendations';
+export { useCreateRequest } from './useCreateRequest';
+export { useRequests } from './useRequests';

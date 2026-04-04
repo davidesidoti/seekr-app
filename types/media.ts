@@ -110,6 +110,7 @@ export interface TvDetails {
   status: string;
   numberOfSeasons: number;
   numberOfEpisodes: number;
+  voteAverage: number;
   genres: Genre[];
   credits: { cast: CastMember[] };
   seasons: Season[];

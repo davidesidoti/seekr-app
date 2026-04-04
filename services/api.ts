@@ -7,6 +7,13 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+  // URLSearchParams (available in RN) encodes spaces as '+', but Jellyseerr
+  // expects '%20'. Force encodeURIComponent-based serialization.
+  paramsSerializer: (params) =>
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .join('&'),
 });
 
 // Request interceptor: inject dynamic base URL and auth

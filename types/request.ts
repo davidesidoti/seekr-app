@@ -13,9 +13,13 @@ export interface MediaRequest {
   id: number;
   status: RequestStatusValue;
   media: {
+    id: number;
     tmdbId: number;
     mediaType: MediaType;
     status: MediaStatusValue;
+    posterPath?: string | null;
+    title?: string;
+    name?: string;
   };
   requestedBy: {
     id: number;
