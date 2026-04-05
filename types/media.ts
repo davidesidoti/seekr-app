@@ -54,7 +54,7 @@ export interface SeasonMediaInfo {
 export interface MediaRequestSummary {
   id: number;
   status: RequestStatusValue;
-  requestedBy: { id: number; username: string };
+  requestedBy: { id: number; username: string | null; displayName?: string | null; email?: string | null };
   createdAt: string;
 }
 

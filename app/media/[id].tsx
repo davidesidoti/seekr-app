@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ChevronLeft, Plus } from 'lucide-react-native';
+import { ChevronLeft, Plus, Play, Check, X } from 'lucide-react-native';
 import { MediaHero, StatusBadge, CastList, MediaRow, RequestModal } from '@/components/media';
-import { useMediaDetails, useRecommendations } from '@/hooks';
+import { useMediaDetails, useRecommendations, useManageRequest } from '@/hooks';
+import { useAuthStore } from '@/stores';
 import { colors } from '@/theme';
-import { MediaStatus } from '@/types';
+import { MediaStatus, RequestStatus } from '@/types';
 import type { MovieDetails, TvDetails } from '@/types';
 
 function isMovie(detail: MovieDetails | TvDetails): detail is MovieDetails {
@@ -21,6 +22,9 @@ export default function MediaDetailScreen() {
   const { data, isLoading, isError } = useMediaDetails(numericId, mediaType);
   const recommendations = useRecommendations(numericId, mediaType);
   const [requestModalVisible, setRequestModalVisible] = useState(false);
+  const { serverUrl, user } = useAuthStore();
+  const { approve, decline } = useManageRequest();
+  const canManage = !!user && (user.permissions & (2 | 8)) !== 0;
 
   function handleBack() {
     if (router.canGoBack()) router.back();
@@ -58,6 +62,10 @@ export default function MediaDetailScreen() {
   const cast = data.credits.cast;
   const genres = data.genres;
   const mediaInfo = data.mediaInfo;
+  const pendingRequests =
+    canManage
+      ? (mediaInfo?.requests ?? []).filter((r) => r.status === RequestStatus.PENDING_APPROVAL)
+      : [];
 
   return (
     <View className="flex-1 bg-background-primary">
@@ -80,19 +88,87 @@ export default function MediaDetailScreen() {
             ) : (
               <View />
             )}
-            {(!mediaInfo ||
-              mediaInfo.status === MediaStatus.UNKNOWN ||
-              mediaInfo.status === MediaStatus.DELETED) && (
-              <Pressable
-                onPress={() => setRequestModalVisible(true)}
-                className="flex-row items-center bg-accent rounded-xl px-lg py-sm gap-xs"
-                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-              >
-                <Plus size={16} color="#fff" />
-                <Text className="text-body-sm text-white font-semibold">Request</Text>
-              </Pressable>
-            )}
+            <View className="flex-row gap-sm">
+              {(mediaInfo?.status === MediaStatus.AVAILABLE ||
+                mediaInfo?.status === MediaStatus.PARTIALLY_AVAILABLE) && (
+                <Pressable
+                  onPress={() => Linking.openURL(`${serverUrl}/web`)}
+                  className="flex-row items-center bg-background-elevated rounded-xl px-lg py-sm gap-xs"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+                >
+                  <Play size={15} color={colors.content.primary} />
+                  <Text className="text-body-sm text-content-primary font-semibold">Watch</Text>
+                </Pressable>
+              )}
+              {(!mediaInfo ||
+                mediaInfo.status === MediaStatus.UNKNOWN ||
+                mediaInfo.status === MediaStatus.DELETED) && (
+                <Pressable
+                  onPress={() => setRequestModalVisible(true)}
+                  className="flex-row items-center bg-accent rounded-xl px-lg py-sm gap-xs"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+                >
+                  <Plus size={16} color="#fff" />
+                  <Text className="text-body-sm text-white font-semibold">Request</Text>
+                </Pressable>
+              )}
+            </View>
           </View>
+
+          {/* Pending requests — admin only */}
+          {pendingRequests.length > 0 && (
+            <View className="mb-lg">
+              <Text className="text-caption text-content-muted font-medium uppercase mb-sm" style={{ letterSpacing: 0.6 }}>
+                Pending Requests
+              </Text>
+              {pendingRequests.map((req) => (
+                <View
+                  key={req.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 8,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.border.DEFAULT + '40',
+                  }}
+                >
+                  <Text className="text-body-sm text-content-secondary flex-1" numberOfLines={1}>
+                    {req.requestedBy.displayName ?? req.requestedBy.username ?? req.requestedBy.email ?? `User #${req.requestedBy.id}`}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Pressable
+                      onPress={() => approve.mutate(req.id)}
+                      disabled={approve.isPending || decline.isPending}
+                      style={({ pressed }) => ({ opacity: pressed || approve.isPending ? 0.6 : 1 })}
+                    >
+                      <View style={{
+                        flexDirection: 'row', alignItems: 'center', gap: 4,
+                        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+                        backgroundColor: colors.status.available + '20',
+                      }}>
+                        <Check size={13} color={colors.status.available} />
+                        <Text style={{ fontSize: 12, fontWeight: '500', color: colors.status.available }}>Approve</Text>
+                      </View>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => decline.mutate(req.id)}
+                      disabled={approve.isPending || decline.isPending}
+                      style={({ pressed }) => ({ opacity: pressed || decline.isPending ? 0.6 : 1 })}
+                    >
+                      <View style={{
+                        flexDirection: 'row', alignItems: 'center', gap: 4,
+                        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+                        backgroundColor: colors.status.declined + '20',
+                      }}>
+                        <X size={13} color={colors.status.declined} />
+                        <Text style={{ fontSize: 12, fontWeight: '500', color: colors.status.declined }}>Decline</Text>
+                      </View>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* Overview */}
           {overview ? (

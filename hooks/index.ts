@@ -7,3 +7,4 @@ export { useMediaDetails } from './useMediaDetails';
 export { useRecommendations } from './useRecommendations';
 export { useCreateRequest } from './useCreateRequest';
 export { useRequests } from './useRequests';
+export { useManageRequest } from './useManageRequest';

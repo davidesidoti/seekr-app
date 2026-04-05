@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Seekr is a native iOS client for Jellyseerr built with React Native + Expo. It lets users browse, search, and request media from self-hosted Jellyseerr instances. The project is currently in the documentation/planning phase with no source code yet — all architecture decisions are documented and ready for implementation.
+Seekr is a native iOS client for Jellyseerr built with React Native + Expo. It lets users browse, search, and request media from self-hosted Jellyseerr instances. v1.0 features (F1–F8) are implemented; v2.0 features (F9–F12) are in progress.
 
 ## Tech Stack
 
@@ -21,7 +21,7 @@ Seekr is a native iOS client for Jellyseerr built with React Native + Expo. It l
 ## Commands
 
 ```bash
-npm install              # Install dependencies
+npm install --legacy-peer-deps   # radix-ui peer conflicts from expo-router require this flag
 npx expo start           # Start dev server
 npx expo run:ios         # Run on iOS simulator
 npm test                 # Run tests (Jest, when configured)
@@ -72,7 +72,7 @@ Root layout wraps everything in providers (QueryClient, Theme) and handles the a
 - **Branches**: `feature/name`, `fix/description`, `docs/what-changed`
 - **Props**: interfaces named `ComponentNameProps`
 - **Enums**: use `as const` objects, not TypeScript enums
-- **Lists**: use `FlashList` (from @shopify/flash-list) instead of FlatList
+- **Lists**: prefer `FlashList` for horizontal rows; use `FlatList` for vertical lists — FlashList 2.0.2 removed `estimatedItemSize` and only supports `span` in `overrideItemLayout`, making it unreliable for variable-height vertical lists
 - **Loading states**: skeleton shimmer only, no spinners
 - **Haptics**: light impact on button press, medium on request submit, success on confirmed
 - **No console.log** in production code
@@ -87,6 +87,18 @@ Root layout wraps everything in providers (QueryClient, Theme) and handles the a
 - Request status enum: 1=PendingApproval, 2=Approved, 3=Declined
 - Some Jellyseerr instances have CSRF protection — may need handling
 - Rate limiting from TMDB side (~40 req/10sec); debounce search (300ms), cache discover endpoints
+
+## Runtime Gotchas
+
+- **Pressable + NativeWind**: Never put layout props (`flexDirection`, `alignItems`) in a `style` callback on `Pressable` — css-interop doesn't apply them. Put layout on a child `View`; keep only `opacity` in the callback.
+- **Horizontal ScrollView sizing**: Set both `flexGrow: 0` AND `flexShrink: 0` to prevent the bar from expanding or compressing when a sibling has `flex: 1`.
+- **Axios 1.x spaces**: Default serializer encodes spaces as `+`; Jellyseerr expects `%20`. A custom `paramsSerializer` using `encodeURIComponent` is already set in `services/api.ts`.
+- **Expo SDK**: Project targets SDK 54 for Expo Go compatibility — do not upgrade to SDK 55+.
+- **Jellyseerr avatar URLs**: May be relative paths (`/avatarproxy/...`) — prepend `serverUrl` before passing to `expo-image`.
+- **`/request` endpoint**: Does not return `posterPath` or `title` in the `media` object — use `useQueries` to batch-fetch media details when titles/posters are needed.
+- **Jellyseerr user fields**: `username` and other string fields can be `null` at runtime despite TypeScript typing them as `string`. For display names use `displayName ?? username ?? email ?? \`User #${id}\`` — Jellyseerr may populate `displayName` even when `username` is null.
+- **Jellyseerr permissions** (bitmask): ADMIN = 2, MANAGE_REQUESTS = 8. Check: `(user.permissions & (2 | 8)) !== 0`.
+- **`expo-image` in `app.json`**: Do NOT add it to the `plugins` array — it causes a PluginError at startup.
 
 ## Documentation
 

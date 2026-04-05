@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface SettingsState {
   language: string;
   notificationsEnabled: boolean;
+  pushRelayUrl: string;
 }
 
 interface SettingsActions {
@@ -16,6 +17,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     (set) => ({
       language: 'en',
       notificationsEnabled: false,
+      pushRelayUrl: '',
 
       update: (partial) => set(partial),
     }),

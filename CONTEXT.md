@@ -79,12 +79,16 @@ services/
 
 ```
 hooks/
-├── useAuth.ts               # Login flow, session check, logout
-├── useTrending.ts           # Trending movies/TV from discover
-├── useSearch.ts             # Search with debounce
+├── queryClient.ts           # Shared QueryClient instance
+├── useTrending.ts           # Trending from /discover/trending
+├── usePopularMovies.ts      # Popular movies, accepts sortBy param
+├── usePopularTv.ts          # Popular TV, accepts sortBy param
+├── useSearch.ts             # Search with 300ms debounce
 ├── useMediaDetails.ts       # Single movie/TV details
-├── useRequests.ts           # User's request list
-├── useCreateRequest.ts      # Mutation: create new request
+├── useRecommendations.ts    # Recommendations for a media item
+├── useRequests.ts           # Request list with filter param
+├── useCreateRequest.ts      # Mutation: create movie/TV request
+└── useManageRequest.ts      # Mutations: approve + decline request (admin)
 ```
 
 - Every hook that fetches data uses `useQuery` or `useMutation` from TanStack Query
@@ -97,23 +101,17 @@ hooks/
 components/
 ├── ui/                      # Base UI primitives
 │   ├── Button.tsx
-│   ├── Badge.tsx
-│   ├── Card.tsx
-│   ├── Input.tsx
-│   ├── Skeleton.tsx
-│   └── SafeAreaView.tsx
+│   ├── Input.tsx            # TextInput with label, error, icon, forwardRef
+│   └── Skeleton.tsx         # Animated shimmer placeholder (number width/height only)
 ├── media/                   # Media-specific components
-│   ├── MediaCard.tsx        # Poster card (used in grids/carousels)
-│   ├── MediaRow.tsx         # Horizontal scrollable row
-│   ├── MediaHero.tsx        # Backdrop hero on detail screen
-│   ├── CastList.tsx         # Horizontal cast avatars
-│   └── StatusBadge.tsx      # Request status indicator
-├── requests/
-│   ├── RequestCard.tsx      # Single request item
-│   └── RequestModal.tsx     # Request creation bottom sheet
-└── layout/
-    ├── Header.tsx           # Screen header with blur
-    └── TabBar.tsx           # Custom tab bar
+│   ├── MediaCard.tsx        # Poster card; accepts optional width prop
+│   ├── MediaCardSkeleton.tsx
+│   ├── MediaRow.tsx         # Horizontal FlashList row with title + skeleton
+│   ├── MediaHero.tsx        # Backdrop + poster hero for detail screen
+│   ├── CastList.tsx         # Horizontal cast avatars row
+│   ├── StatusBadge.tsx      # Media availability badge (needs alignSelf:'flex-start')
+│   └── RequestModal.tsx     # Request creation bottom sheet (movie confirm / TV season picker)
+└── layout/                  # (empty — no custom layout components yet)
 ```
 
 - Every component is a named export (not default) except screen files
@@ -209,17 +207,28 @@ Media images (posters, backdrops) come from TMDB:
 
 ## Current Status
 
-- [ ] Project scaffolding (Expo init, dependencies, folder structure)
-- [ ] Theme & design system setup
-- [ ] Auth flow (server setup + Jellyfin login)
-- [ ] Home screen (trending/popular)
-- [ ] Search screen
-- [ ] Media detail screen
-- [ ] Request creation flow
-- [ ] My Requests screen
-- [ ] Settings screen
-- [ ] Push notifications
-- [ ] App Store submission
+### v1.0 — Complete ✅
+- [x] Project scaffolding (Expo SDK 54, dependencies, folder structure)
+- [x] Theme & design system (colors, typography, NativeWind)
+- [x] Auth flow — F1: server setup, F2: Jellyfin login, session persistence
+- [x] Home screen — F3: trending + popular rows, sort controls (Popular/Top Rated/New)
+- [x] Search screen — F4: debounced 2-column grid
+- [x] Media detail screen — F5: hero, cast, recommendations, Watch Now button
+- [x] Request creation — F6: bottom sheet modal (movie confirm / TV season picker)
+- [x] My Requests screen — F7: filter tabs, admin approve/decline inline
+- [x] Settings screen — F8: profile, server info, sign out
+
+### v2.0 — In Progress 🚧
+- [x] F10: Admin panel — approve/decline requests (in Requests tab + Media Detail)
+- [x] F11: Discover filters — Sort + genre chip row on Home screen (year/network/studio/certification deferred to v3)
+- [x] F12: Watch Now — opens Jellyfin web UI from Media Detail when media is available
+- [x] F9: Push notifications — relay VPS + expo-notifications; token registered on login; Settings has URL + toggle
+
+### v3.0 — Planned ❌
+- [ ] F13: Multi-server support
+- [ ] F14: iOS Widgets
+- [ ] F15: Watchlist
+- [ ] F16: iPad layout
 
 ## Known Gotchas
 
@@ -228,3 +237,7 @@ Media images (posters, backdrops) come from TMDB:
 - Some Jellyseerr instances have CSRF protection enabled, which may need to be disabled or handled
 - The Jellyseerr API is largely undocumented officially; the OpenAPI spec at `/api-docs` is the best reference
 - Rate limiting on TMDB side may apply for discover/trending endpoints
+- `username` and other user string fields can be `null` at runtime — use `displayName ?? username ?? email ?? fallback`
+- Avatar URLs from Jellyseerr may be relative paths (`/avatarproxy/...`) — prepend `serverUrl` before use
+- `GET /request` does not return `posterPath` or `title` in the media object — use `useQueries` to batch-fetch details
+- Permissions are a bitmask: ADMIN=2, MANAGE_REQUESTS=8; check with `(permissions & (2|8)) !== 0`

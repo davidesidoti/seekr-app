@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Pressable, Alert, ScrollView, Switch, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -6,7 +7,8 @@ import { LogOut, Server } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores';
-import { authService } from '@/services';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { authService, registerPushToken } from '@/services';
 import { queryClient } from '@/hooks';
 import { colors } from '@/theme';
 
@@ -28,6 +30,26 @@ export default function SettingsScreen() {
   });
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+  const { notificationsEnabled, pushRelayUrl, update: updateSettings } = useSettingsStore();
+  const [relayUrlDraft, setRelayUrlDraft] = useState(pushRelayUrl);
+
+  async function handleNotificationsToggle(value: boolean) {
+    updateSettings({ notificationsEnabled: value });
+    if (value) {
+      // Trigger registration immediately when the user turns notifications on
+      if (!pushRelayUrl) {
+        Alert.alert('Relay URL required', 'Enter the push relay URL first.');
+        updateSettings({ notificationsEnabled: false });
+        return;
+      }
+      await registerPushToken();
+    }
+  }
+
+  function commitRelayUrl() {
+    const trimmed = relayUrlDraft.trim().replace(/\/$/, '');
+    updateSettings({ pushRelayUrl: trimmed });
+  }
 
   async function handleLogout() {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -175,6 +197,68 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Notifications */}
+        <SectionLabel label="Notifications" />
+        <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
+          <View
+            style={{
+              backgroundColor: colors.background.card,
+              borderRadius: 14,
+              paddingHorizontal: 16,
+            }}
+          >
+            {/* Relay URL input */}
+            <View
+              style={{
+                paddingVertical: 14,
+                borderBottomWidth: 0.5,
+                borderBottomColor: colors.border.DEFAULT + '60',
+              }}
+            >
+              <Text style={{ fontSize: 13, color: colors.content.muted, marginBottom: 6 }}>
+                Push relay URL
+              </Text>
+              <TextInput
+                value={relayUrlDraft}
+                onChangeText={setRelayUrlDraft}
+                onBlur={commitRelayUrl}
+                onSubmitEditing={commitRelayUrl}
+                placeholder="https://push.yourdomain.com"
+                placeholderTextColor={colors.content.muted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                returnKeyType="done"
+                style={{
+                  fontSize: 14,
+                  color: colors.content.primary,
+                  padding: 0,
+                }}
+              />
+            </View>
+
+            {/* Enable toggle */}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingVertical: 14,
+              }}
+            >
+              <Text style={{ fontSize: 15, color: colors.content.primary }}>
+                Enable notifications
+              </Text>
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={handleNotificationsToggle}
+                trackColor={{ false: colors.background.elevated, true: colors.accent.DEFAULT }}
+                thumbColor="#fff"
+              />
+            </View>
+          </View>
+        </View>
+
         {/* App */}
         <SectionLabel label="App" />
         <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
@@ -186,7 +270,7 @@ export default function SettingsScreen() {
             }}
           >
             <Row label="Version" value={appVersion} divider />
-            <Row label="Powered by" value="Jellyseerr" />
+            <Row label="Powered by" value="@Hash" />
           </View>
         </View>
 

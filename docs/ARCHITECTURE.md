@@ -147,11 +147,11 @@ Each service file groups related API calls:
 
 ```
 services/
-├── api.ts        → Axios instance (the foundation)
-├── auth.ts       → login, logout, validateSession, getPublicSettings
-├── media.ts      → getTrending, getPopular, search, getDetails, getRecommendations
-├── request.ts    → createRequest, getRequests, updateRequest, deleteRequest
-└── user.ts       → getProfile, updateProfile, getQuota
+├── api.ts        → Axios instance with paramsSerializer (encodeURIComponent for %20)
+├── auth.ts       → loginWithJellyfin, logout, validateSession, getPublicSettings
+├── media.ts      → getTrending, getPopularMovies/Tv (sortBy), search, getMovie/TvDetails, getRecommendations
+├── request.ts    → createRequest, getRequests, approveRequest, declineRequest, deleteRequest
+└── user.ts       → getProfile, getQuota
 ```
 
 Services return **typed data**, not raw Axios responses:
@@ -170,11 +170,15 @@ Each hook wraps a service call with caching and refetch logic:
 
 ```
 hooks/
-├── useTrending.ts      → useQuery(['trending', type], () => media.getTrending(type))
-├── useSearch.ts        → useQuery(['search', query], ..., { enabled: query.length > 2 })
-├── useMediaDetails.ts  → useQuery(['media', id], () => media.getDetails(id))
-├── useRequests.ts      → useQuery(['requests', 'mine'], () => request.getRequests())
-└── useCreateRequest.ts → useMutation(request.create, { onSuccess: invalidate(['requests']) })
+├── useTrending.ts        → useQuery(['trending'])
+├── usePopularMovies.ts   → useQuery(['popular', 'movies', sortBy])
+├── usePopularTv.ts       → useQuery(['popular', 'tv', sortBy])
+├── useSearch.ts          → useQuery(['search', query], enabled: query.length >= 3)
+├── useMediaDetails.ts    → useQuery(['media', type, id])
+├── useRecommendations.ts → useQuery(['recommendations', type, id])
+├── useRequests.ts        → useQuery(['requests', filter])
+├── useCreateRequest.ts   → useMutation → invalidates ['media'] + ['requests']
+└── useManageRequest.ts   → approve + decline mutations → invalidates ['media'] + ['requests']
 ```
 
 ## Caching Strategy
@@ -226,8 +230,7 @@ hooks/
 
 ### List Performance
 
-- Use `FlashList` (from @shopify/flash-list) instead of FlatList for long scrolling lists
-- Estimated item sizes for all list components
+- Use `FlashList` for horizontal rows (MediaRow); use `FlatList` for vertical lists — FlashList 2.0.2 removed `estimatedItemSize` and only supports `span` in `overrideItemLayout`, making it unreliable for variable-height vertical lists
 - Skeleton loading states (no spinners)
 
 ### Bundle Size
