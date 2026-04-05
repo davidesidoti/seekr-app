@@ -23,7 +23,9 @@ export interface MediaRequest {
   };
   requestedBy: {
     id: number;
-    username: string;
+    username: string | null;
+    displayName?: string | null;
+    email?: string | null;
     avatar: string | null;
   };
   seasons?: { seasonNumber: number }[];

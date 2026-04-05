@@ -14,9 +14,11 @@ export async function getTrending(
 export async function getPopularMovies(
   page = 1,
   language?: string,
+  sortBy?: string,
+  genre?: number,
 ): Promise<PaginatedResponse<MediaResult>> {
   const response = await api.get<PaginatedResponse<MediaResult>>('/discover/movies', {
-    params: { page, language },
+    params: { page, language, sortBy, genre },
   });
   return response.data;
 }
@@ -24,9 +26,11 @@ export async function getPopularMovies(
 export async function getPopularTv(
   page = 1,
   language?: string,
+  sortBy?: string,
+  genre?: number,
 ): Promise<PaginatedResponse<MediaResult>> {
   const response = await api.get<PaginatedResponse<MediaResult>>('/discover/tv', {
-    params: { page, language },
+    params: { page, language, sortBy, genre },
   });
   return response.data;
 }

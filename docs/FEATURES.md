@@ -4,15 +4,16 @@
 
 ## Release Plan
 
-### v1.0 -- MVP
+### v1.0 -- MVP ✅ Complete
 
 Core functionality to replace the mobile web experience.
 
-### v2.0 -- Enhanced
+### v2.0 -- Enhanced 🚧 In Progress
 
 Admin features, notifications, and deeper integrations.
+- F9 ✅ F10 ✅ F11 ✅ F12 ✅
 
-### v3.0 -- Power User
+### v3.0 -- Power User ❌ Planned
 
 Multi-server, widgets, Shortcuts, and advanced discovery.
 
@@ -20,7 +21,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ## v1.0 Features
 
-### F1: Server Setup
+### F1: Server Setup ✅
 
 **User story**: As a user, I want to connect to my Jellyseerr instance so I can manage my media requests.
 
@@ -44,7 +45,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F2: Authentication
+### F2: Authentication ✅
 
 **User story**: As a user, I want to log in with my Jellyfin account so my requests are tied to my identity.
 
@@ -68,7 +69,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F3: Home / Discover Screen
+### F3: Home / Discover Screen ✅
 
 **User story**: As a user, I want to see trending and popular media when I open the app so I can discover new content.
 
@@ -95,7 +96,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F4: Search
+### F4: Search ✅
 
 **User story**: As a user, I want to search for movies and TV shows so I can find specific content to request.
 
@@ -118,7 +119,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F5: Media Detail
+### F5: Media Detail ✅
 
 **User story**: As a user, I want to see full details about a movie or TV show so I can decide whether to request it.
 
@@ -148,7 +149,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F6: Request Creation
+### F6: Request Creation ✅
 
 **User story**: As a user, I want to request a movie or specific TV seasons so they get added to my media library.
 
@@ -179,7 +180,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F7: My Requests
+### F7: My Requests ✅
 
 **User story**: As a user, I want to see all my requests and their current status.
 
@@ -205,7 +206,7 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ---
 
-### F8: Settings
+### F8: Settings ✅
 
 **User story**: As a user, I want to manage my connection and app preferences.
 
@@ -226,29 +227,29 @@ Multi-server, widgets, Shortcuts, and advanced discovery.
 
 ## v2.0 Features (Planned)
 
-### F9: Push Notifications
+### F9: Push Notifications ✅
 
-- Notification when a request is approved
-- Notification when requested media becomes available
-- Requires Expo push token registration with a lightweight backend (or polling fallback)
+- Notification when a request is approved, available, or declined
+- Relay VPS (Node.js + Express + SQLite) receives Jellyseerr webhooks and forwards via Expo Push API
+- App registers Expo push token with relay after login (if enabled)
+- Settings: relay URL input + enable/disable toggle
 
-### F10: Admin Panel
+### F10: Admin Panel ✅
 
 - Approve/reject pending requests from other users
 - View all users' requests
 - Only visible to users with admin/manage permissions
 
-### F11: Discover Filters
+### F11: Discover Filters ✅
 
-- Browse by genre, year, network, studio
-- Sort by popularity, rating, release date
-- Certification filter (G, PG, PG-13, R, etc.)
+- ✅ Sort by popularity, rating, release date (Home screen pills)
+- ✅ Browse by genre — horizontal chip row filters Popular Movies + Popular TV rows
+- ❌ Year / network / studio / certification filters (v3 candidate)
 
-### F12: Deep Link to Jellyfin
+### F12: Deep Link to Jellyfin ✅
 
-- "Watch Now" button on available media
-- Opens Jellyfin iOS app directly to that title
-- Fallback to Jellyfin web if app not installed
+- ✅ "Watch" button on available/partially-available media opens `${serverUrl}/web`
+- ❌ Deep link to Jellyfin iOS app (`jellyfin://`) requires Jellyfin item ID not available from Jellyseerr
 
 ---
 

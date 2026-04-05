@@ -13,8 +13,9 @@ import { User, Lock } from 'lucide-react-native';
 import axios from 'axios';
 
 import { Button, Input } from '@/components/ui';
-import { authService } from '@/services';
+import { authService, registerPushToken } from '@/services';
 import { useAuthStore } from '@/stores';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 function friendlyError(err: unknown): string {
   if (axios.isAxiosError(err)) {
@@ -52,6 +53,9 @@ export default function LoginScreen() {
     try {
       const user = await authService.loginWithJellyfin({ username: username.trim(), password });
       login(user);
+      // Fire-and-forget: register push token if relay is configured and notifications enabled
+      const { notificationsEnabled, pushRelayUrl } = useSettingsStore.getState();
+      if (notificationsEnabled && pushRelayUrl) registerPushToken();
       router.replace('/(tabs)');
     } catch (err) {
       setError(friendlyError(err));

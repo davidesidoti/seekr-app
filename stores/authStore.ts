@@ -6,7 +6,7 @@ import type { User } from '@/types';
 interface PersistedAuth {
   serverUrl: string | null;
   apiKey: string | null;
-  user: Pick<User, 'id' | 'username' | 'avatar' | 'permissions' | 'userType'> | null;
+  user: Pick<User, 'id' | 'email' | 'username' | 'avatar' | 'permissions' | 'userType'> | null;
 }
 
 interface AuthState extends PersistedAuth {
@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         set({
           user: {
             id: user.id,
+            email: user.email,
             username: user.username,
             avatar: user.avatar,
             permissions: user.permissions,

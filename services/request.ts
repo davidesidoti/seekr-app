@@ -31,6 +31,16 @@ export async function getRequestCount(): Promise<RequestCount> {
   return response.data;
 }
 
+export async function approveRequest(requestId: number): Promise<MediaRequest> {
+  const response = await api.post<MediaRequest>(`/request/${requestId}/approve`);
+  return response.data;
+}
+
+export async function declineRequest(requestId: number): Promise<MediaRequest> {
+  const response = await api.post<MediaRequest>(`/request/${requestId}/decline`);
+  return response.data;
+}
+
 export async function deleteRequest(requestId: number): Promise<void> {
   await api.delete(`/request/${requestId}`);
 }

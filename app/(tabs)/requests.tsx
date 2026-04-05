@@ -2,17 +2,22 @@ import { useState } from 'react';
 import { View, Text, Pressable, ScrollView, RefreshControl, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { Film, Tv } from 'lucide-react-native';
+import { Film, Tv, Check, X } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useQueries } from '@tanstack/react-query';
-import { useRequests } from '@/hooks';
+import { useRequests, useManageRequest } from '@/hooks';
 import { StatusBadge } from '@/components/media';
 import { mediaService } from '@/services';
 import { tmdbImage } from '@/utils';
 import { colors } from '@/theme';
 import { RequestStatus, MediaStatus } from '@/types';
+import { useAuthStore } from '@/stores';
 import type { MediaRequest, RequestFilter, RequestStatusValue, MediaStatusValue } from '@/types';
 import type { MovieDetails, TvDetails } from '@/types';
+
+// Jellyseerr permission bitmask
+const PERM_ADMIN = 2;
+const PERM_MANAGE_REQUESTS = 8;
 
 const FILTERS: { label: string; value: RequestFilter }[] = [
   { label: 'All', value: 'all' },
@@ -69,6 +74,9 @@ function RequestStatusDisplay({
 export default function RequestsScreen() {
   const [activeFilter, setActiveFilter] = useState<RequestFilter>('all');
   const { data, isLoading, isRefetching, refetch } = useRequests(activeFilter);
+  const { approve, decline } = useManageRequest();
+  const { user } = useAuthStore();
+  const canManage = !!user && (user.permissions & (PERM_ADMIN | PERM_MANAGE_REQUESTS)) !== 0;
   const requests = data?.results ?? [];
 
   // Fetch media details for titles + posters (served from cache if already visited)
@@ -85,6 +93,8 @@ export default function RequestsScreen() {
   });
 
   function renderItem({ item, index }: { item: MediaRequest; index: number }) {
+    const isPending = item.status === RequestStatus.PENDING_APPROVAL;
+    const showActions = canManage && isPending;
     const details = mediaDetailQueries[index]?.data as MovieDetails | TvDetails | undefined;
     const title = details
       ? 'title' in details
@@ -182,6 +192,50 @@ export default function RequestsScreen() {
             </View>
 
             <Text style={{ fontSize: 11, color: colors.content.muted }}>{date}</Text>
+
+            {/* Approve / Decline — admin only, pending only */}
+            {showActions && (
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <Pressable
+                  onPress={() => approve.mutate(item.id)}
+                  disabled={approve.isPending || decline.isPending}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                    backgroundColor: colors.status.available + '20',
+                    opacity: pressed || approve.isPending ? 0.6 : 1,
+                  })}
+                >
+                  <Check size={13} color={colors.status.available} />
+                  <Text style={{ fontSize: 12, fontWeight: '500', color: colors.status.available }}>
+                    Approve
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => decline.mutate(item.id)}
+                  disabled={approve.isPending || decline.isPending}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                    backgroundColor: colors.status.declined + '20',
+                    opacity: pressed || decline.isPending ? 0.6 : 1,
+                  })}
+                >
+                  <X size={13} color={colors.status.declined} />
+                  <Text style={{ fontSize: 12, fontWeight: '500', color: colors.status.declined }}>
+                    Decline
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
 
           {/* Status — flex-shrink so it never expands */}
